@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Škoda Clicker: Simply Clever Assembly</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for crisp icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tone.js for procedural sound effects without external URLs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Google Fonts: Inter & Rajdhani for automotive dashboard feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --skoda-emerald: #0E3A2F;
+            --skoda-electric: #78FAAE;
+            --skoda-dark: #071F19;
+            --skoda-card: #124739;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--skoda-dark);
+            color: #F3F4F6;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        .font-display {
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* Custom Scrollbar for Upgrade Shop */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(7, 31, 25, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #236B56;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--skoda-electric);
+        }
+
+        /* Car Bounce & Pulse Animations */
+        @keyframes carClick {
+            0% { transform: scale(1); }
+            40% { transform: scale(0.93) rotate(-1deg); }
+            80% { transform: scale(1.03) rotate(1deg); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-car-click {
+            animation: carClick 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-70px) scale(1.2);
+            }
+        }
+
+        .floating-number {
+            position: absolute;
+            pointer-events: none;
+            font-weight: 800;
+            color: var(--skoda-electric);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            animation: floatUp 0.85s ease-out forwards;
+            z-index: 50;
+        }
+
+        /* Glowing Button Effect */
+        .btn-skoda {
+            background: linear-gradient(135deg, #165947 0%, #0E3A2F 100%);
+            border: 1px solid rgba(120, 250, 174, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.15s ease;
+        }
+
+        .btn-skoda:hover:not(:disabled) {
+            border-color: var(--skoda-electric);
+            box-shadow: 0 0 18px rgba(120, 250, 174, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .btn-skoda:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn-skoda:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.6);
+        }
+
+        /* Subtle grid background */
+        .bg-blueprint {
+            background-image: 
+                linear-gradient(to right, rgba(120, 250, 174, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(120, 250, 174, 0.04) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-blueprint">
+
+    <!-- Top Navigation / Header -->
+    <header class="bg-[#0A2921]/90 backdrop-blur-md border-b border-[#78FAAE]/20 px-4 py-3 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand Identity -->
+            <div class="flex items-center gap-3">
+                <!-- Stylized Winged Arrow SVG Emblem -->
+                <div class="w-10 h-10 rounded-full bg-[#0E3A2F] border-2 border-[#78FAAE] flex items-center justify-center shadow-[0_0_15px_rgba(120,250,174,0.3)]">
+                    <svg viewBox="0 0 64 64" class="w-6 h-6 text-[#78FAAE]" fill="currentColor">
+                        <path d="M52 24H26l6-8-18 14 18 14-6-8h26l-4-6 4-6z"/>
+                        <circle cx="38" cy="30" r="2.5" fill="#071F19"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-display text-xl sm:text-2xl font-bold tracking-wider text-white leading-none">
+                        ŠKODA <span class="text-[#78FAAE]">CLICKER</span>
+                    </h1>
+                    <p class="text-[11px] uppercase tracking-widest text-emerald-300/70">Mladá Boleslav Assembly</p>
+                </div>
+            </div>
+
+            <!-- Utility Controls (Sound, Save, Reset, Useful Trivia) -->
+            <div class="flex items-center gap-2">
+                <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-[#124739] hover:bg-[#195E4C] text-[#78FAAE] border border-[#78FAAE]/20 transition" title="Toggle Audio">
+                    <i id="soundIcon" class="fas fa-volume-up"></i>
+                </button>
+                <button onclick="manualSave()" class="px-3 py-2 rounded-xl bg-[#124739] hover:bg-[#195E4C] text-xs font-semibold text-emerald-100 border border-[#78FAAE]/20 transition flex items-center gap-1.5">
+                    <i class="fas fa-save text-[#78FAAE]"></i> <span class="hidden sm:inline">Save</span>
+                </button>
+                <button onclick="openResetModal()" class="px-3 py-2 rounded-xl bg-red-950/60 hover:bg-red-900/80 text-xs font-semibold text-red-200 border border-red-500/30 transition flex items-center gap-1.5">
+                    <i class="fas fa-rotate-left"></i> <span class="hidden sm:inline">Reset</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Custom Toast / Notification Banner (Replaces alert()) -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Main Game Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        
+        <!-- LEFT COLUMN: Assembly Stage & Active Vehicle (5 cols on desktop) -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            
+            <!-- Score & Production Telemetry Card -->
+            <div class="bg-[#0E3A2F]/90 border border-[#78FAAE]/25 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-[#78FAAE]/80">Clever Points (CP)</span>
+                        <div id="scoreDisplay" class="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight mt-0.5">
+                            0
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#78FAAE]/15 text-[#78FAAE] border border-[#78FAAE]/30">
+                            <span class="w-2 h-2 rounded-full bg-[#78FAAE] animate-ping"></span>
+                            <span id="cpsDisplay">0.0</span> CP/sec
+                        </span>
+                        <p class="text-xs text-emerald-200/70 mt-1.5">
+                            Click Power: <span id="cpcDisplay" class="font-bold text-white">+1</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Era / Model Tier Progress Bar -->
+                <div class="mt-4 pt-3 border-t border-white/10">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-emerald-200">Current Line: <strong id="currentModelName" class="text-[#78FAAE]">Škoda Felicia</strong></span>
+                        <span id="nextModelText" class="text-emerald-300/70">Next: Fabia (500 CP)</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-[#071F19] rounded-full overflow-hidden p-0.5 border border-[#78FAAE]/20">
+                        <div id="tierProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-[#78FAAE] rounded-full transition-all duration-300" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Vehicle Clicker Stage -->
+            <div id="clickStage" class="bg-gradient-to-b from-[#124739] to-[#0A2921] border-2 border-[#78FAAE]/30 rounded-3xl p-6 flex flex-col items-center justify-center relative shadow-2xl min-h-[290px] sm:min-h-[330px]">
+                
+                <!-- Random "Simply Clever" Bonus Event Pop-up (Ice Scraper / Umbrella) -->
+                <button id="cleverBonusBtn" onclick="claimCleverBonus()" class="hidden absolute top-4 right-4 z-30 animate-bounce bg-[#78FAAE] text-[#071F19] font-extrabold text-xs px-3 py-2 rounded-full shadow-[0_0_20px_#78FAAE] flex items-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-umbrella"></i> <span id="cleverBonusLabel">Door Umbrella! +50</span>
+                </button>
+
+                <!-- Interactive Car Button -->
+                <button id="carClickTarget" onclick="handleCarClick(event)" class="relative group focus:outline-none cursor-pointer p-4 rounded-3xl transition-transform active:scale-95">
+                    <!-- Radial glow behind car -->
+                    <div class="absolute inset-0 bg-[#78FAAE]/10 rounded-full blur-2xl group-hover:bg-[#78FAAE]/20 transition-all"></div>
+                    
+                    <!-- Dynamic SVG Vehicle Illustration -->
+                    <div id="vehicleVisual" class="relative z-10 w-64 sm:w-72 h-40 flex items-center justify-center">
+                        <!-- Injected dynamically via JS based on vehicle tier -->
+                    </div>
+                </button>
+
+                <p class="text-xs text-emerald-200/80 mt-2 font-medium flex items-center gap-2">
+                    <i class="fas fa-hand-pointer text-[#78FAAE]"></i> Tap vehicle or press <kbd class="px-1.5 py-0.5 bg-[#071F19] border border-[#78FAAE]/30 rounded text-[10px]">SPACE</kbd> to assemble!
+                </p>
+            </div>
+
+            <!-- "Useful" Real-World Škoda Feature & Maintenance Tip Card -->
+            <div class="bg-[#0E3A2F]/80 border border-[#78FAAE]/20 rounded-2xl p-4 shadow-lg">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-[#78FAAE] flex items-center gap-1.5">
+                        <i class="fas fa-lightbulb"></i> Simply Clever & Owner Tip
+                    </span>
+                    <button onclick="cycleUsefulTip()" class="text-xs text-emerald-300 hover:text-white underline cursor-pointer">
+                        Next Tip <i class="fas fa-arrow-right ml-0.5"></i>
+                    </button>
+                </div>
+                <p id="usefulTipText" class="text-xs sm:text-sm text-emerald-50/90 leading-relaxed">
+                    Loading Škoda wisdom...
+                </p>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: Upgrades, Fleet & Simply Clever Research (7 cols on desktop) -->
+        <section class="lg:col-span-7 bg-[#0E3A2F]/90 border border-[#78FAAE]/25 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col">
+            
+            <!-- Category Tabs -->
+            <div class="grid grid-cols-3 gap-2 p-1 bg-[#071F19] rounded-xl border border-[#78FAAE]/15 mb-4">
+                <button onclick="switchTab('production')" id="tab-production" class="py-2.5 px-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 bg-[#165947] text-[#78FAAE] shadow">
+                    <i class="fas fa-industry"></i> <span>Assembly Line</span>
+                </button>
+                <button onclick="switchTab('clever')" id="tab-clever" class="py-2.5 px-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 text-emerald-200/70 hover:text-white">
+                    <i class="fas fa-wrench"></i> <span>Simply Clever</span>
+                </button>
+                <button onclick="switchTab('garage')" id="tab-garage" class="py-2.5 px-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 text-emerald-200/70 hover:text-white">
+                    <i class="fas fa-car-side"></i> <span>Model Garage</span>
+                </button>
+            </div>
+
+            <!-- Tab Content Container -->
+            <div id="shopContainer" class="space-y-3 max-h-[540px] overflow-y-auto pr-1">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Custom Confirmation Modal for Hard Reset (Never uses confirm()) -->
+    <div id="resetModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#0E3A2F] border-2 border-[#78FAAE]/40 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 class="font-display text-xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-triangle-exclamation text-amber-400"></i> Reset Factory Progress?
+            </h3>
+            <p class="text-sm text-emerald-100/80 mt-2">
+                This will clear your Clever Points, unlocked Škoda models, and upgrades. Are you sure you want to start fresh?
+            </p>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeResetModal()" class="px-4 py-2 rounded-xl bg-[#071F19] text-emerald-200 text-sm font-semibold hover:bg-black/50">
+                    Cancel
+                </button>
+                <button onclick="confirmHardReset()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold shadow-lg">
+                    Yes, Reset Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ŠKODA CLICKER - COMPLETE GAME ENGINE
+         * Includes procedural WebAudio via Tone.js, auto-saving, vehicle tiers,
+         * "Simply Clever" click multipliers, and real-world useful Škoda owner facts.
+         */
+
+        // --- 1. GAME DATA & CONFIGURATION ---
+
+        const VEHICLE_MODELS = [
+            {
+                id: 'felicia',
+                name: 'Škoda Felicia (1994)',
+                unlockAt: 0,
+                color: '#78FAAE',
+                accent: '#E5E7EB',
+                bodyType: 'hatch',
+                desc: 'The beloved 90s classic that started the modern era.'
+            },
+            {
+                id: 'fabia',
+                name: 'Škoda Fabia Monte Carlo',
+                unlockAt: 500,
+                color: '#EF4444',
+                accent: '#111827',
+                bodyType: 'hatch',
+                desc: 'Agile city hatchback with rally-inspired black accents.'
+            },
+            {
+                id: 'octavia',
+                name: 'Škoda Octavia Combi RS',
+                unlockAt: 3500,
+                color: '#84CC16',
+                accent: '#0F172A',
+                bodyType: 'combi',
+                desc: 'The undisputed king of cavernous trunk space and practicality.'
+            },
+            {
+                id: 'superb',
+                name: 'Škoda Superb L&K',
+                unlockAt: 20000,
+                color: '#38BDF8',
+                accent: '#F8FAFC',
+                bodyType: 'sedan',
+                desc: 'Executive flagship comfort with rear legroom for days.'
+            },
+            {
+                id: 'kodiaq',
+                name: 'Škoda Kodiaq 4x4',
+                unlockAt: 100000,
+                color: '#F59E0B',
+                accent: '#1F2937',
+                bodyType: 'suv',
+                desc: 'Rugged 7-seat family SUV ready for any mountain pass.'
+            },
+            {
+                id: 'enyaq',
+                name: 'Škoda Enyaq Coupé RS iV',
+                unlockAt: 500000,
+                color: '#78FAAE',
+                accent: '#34D399',
+                bodyType: 'ev',
+                desc: 'All-electric MEB platform flagship with illuminated Crystal Face.'
+            }
+        ];
+
+        // Automated Production Buildings (CP per second)
+        const PRODUCTION_UPGRADES = [
+            {
+                id: 'apprentice',
+                name: 'Mladá Boleslav Apprentice',
+                icon: 'fa-user-gear',
+                baseCost: 15,
+                baseCps: 0.5,
+                desc: 'Assembles lug nuts and checks panel gaps diligently.'
+            },
+            {
+                id: 'welder',
+                name: 'Kvasiny Robotic Welder',
+                icon: 'fa-robot',
+                baseCost: 100,
+                baseCps: 4,
+                desc: 'High-precision laser welding for galvanized steel frames.'
+            },
+            {
+                id: 'tsi_line',
+                name: 'TSI & TDI Engine Line',
+                icon: 'fa-gears',
+                baseCost: 650,
+                baseCps: 22,
+                desc: 'Turbocharged efficiency tuned for long highway cruises.'
+            },
+            {
+                id: 'wind_tunnel',
+                name: 'Aero Wind Tunnel Lab',
+                icon: 'fa-wind',
+                baseCost: 3800,
+                baseCps: 115,
+                desc: 'Sculpts mirrors and underbodies down to 0.23 Cd drag.'
+            },
+            {
+                id: 'meb_gigapress',
+                name: 'MEB Battery Gigafactory',
+                icon: 'fa-bolt',
+                baseCost: 22000,
+                baseCps: 620,
+                desc: 'Produces high-density EV modules with rapid DC charging.'
+            },
+            {
+                id: 'motorsport_hq',
+                name: 'Škoda Motorsport WRC2 HQ',
+                icon: 'fa-flag-checkered',
+                baseCost: 140000,
+                baseCps: 3400,
+                desc: 'Championship-winning rally engineering applied to street cars.'
+            }
+        ];
+
+        // Click Power & Multiplier Upgrades ("Simply Clever" Features)
+        const CLEVER_UPGRADES = [
+            {
+                id: 'ice_scraper',
+                name: 'Fuel-Cap Ice Scraper',
+                icon: 'fa-snowflake',
+                baseCost: 25,
+                clickBonus: 1,
+                desc: 'Hidden inside the fuel door—includes a handy tire tread gauge! (+1 CP/click)'
+            },
+            {
+                id: 'umbrella',
+                name: 'Door-Integrated Umbrella',
+                icon: 'fa-umbrella',
+                baseCost: 180,
+                clickBonus: 5,
+                desc: 'Tucked inside the front door with a water-draining channel. (+5 CP/click)'
+            },
+            {
+                id: 'ticket_holder',
+                name: 'A-Pillar Ticket Clip',
+                icon: 'fa-ticket',
+                baseCost: 950,
+                clickBonus: 20,
+                desc: 'Simple clear clip on the windshield so parking passes never blow away. (+20 CP/click)'
+            },
+            {
+                id: 'funnel_cap',
+                name: 'Integrated Washer Funnel',
+                icon: 'fa-fill-drip',
+                baseCost: 4800,
+                clickBonus: 85,
+                desc: 'Blue rubber cap unfolds into a spill-proof funnel under the hood. (+85 CP/click)'
+            },
+            {
+                id: 'cargo_elements',
+                name: 'Velcro Trunk Cargo Blocks',
+                icon: 'fa-box-open',
+                baseCost: 25000,
+                clickBonus: 350,
+                desc: 'Stops groceries and tools from sliding around corners. (+350 CP/click)'
+            },
+            {
+                id: 'virtual_cockpit',
+                name: 'Smart Dials & Virtual Cockpit',
+                icon: 'fa-gauge-high',
+                baseCost: 125000,
+                clickBonus: 1500,
+                desc: 'Tactile rotary dials with miniature OLED screens for instant control. (+1,500 CP/click)'
+            }
+        ];
+
+        // Useful Real-World Škoda Owner & History Trivia
+        const USEFUL_TIPS = [
+            "Simply Clever Tip: Check the inside of your fuel filler flap—most modern Škodas hide an ice scraper with built-in 1.6mm & 3mm tire tread depth markers!",
+            "Maintenance Tip: On DSG dual-clutch transmissions (DQ250/DQ381), changing the transmission fluid every 60,000 km keeps shifts silky smooth.",
+            "History Fact: Founded in 1895 by Václav Laurin and Václav Klement, Škoda originally started by repairing and manufacturing Slavia bicycles.",
+            "Simply Clever Tip: Many Škoda models feature a reversible trunk mat—carpet on one side for luggage, wipe-clean rubber on the flip side for muddy boots.",
+            "Owner Hack: Hold down the unlock button on your Škoda key fob for 3 seconds to roll down all windows remotely on hot summer days.",
+            "Engineering Fact: The winged arrow in the Škoda logo symbolizes speed (wings), progress (arrow), precision (the eye), and global vision (the circle).",
+            "Winter Tip: If your Škoda has a heated windshield (ClimaCoat), use it before scraping—it melts frost silently without visible heating wires."
+        ];
+
+        // --- 2. GAME STATE ---
+
+        let gameState = {
+            score: 0,
+            totalEarned: 0,
+            totalClicks: 0,
+            selectedModelId: 'felicia',
+            activeTab: 'production',
+            soundEnabled: true,
+            tipIndex: 0,
+            productionOwned: {},
+            cleverOwned: {}
+        };
+
+        // Initialize counts to 0
+        PRODUCTION_UPGRADES.forEach(u => gameState.productionOwned[u.id] = 0);
+        CLEVER_UPGRADES.forEach(u => gameState.cleverOwned[u.id] = 0);
+
+        let activeBonusValue = 0;
+        let audioInitialized = false;
+        let synth = null;
+
+        // --- 3. PROCEDURAL SOUND EFFECTS (Tone.js) ---
+
+        function initAudio() {
+            if (audioInitialized) return;
+            try {
+                Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.005, decay: 0.08, sustain: 0.01, release: 0.1 }
+                }).toDestination();
+                synth.volume.value = -12;
+                audioInitialized = true;
+            } catch (e) {
+                console.warn("Audio initialization deferred:", e);
+            }
+        }
+
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            initAudio();
+            if (!synth) return;
+
+            try {
+                if (type === 'click') {
+                    // Crisp mechanical torque-wrench click sound
+                    const notes = ['C5', 'E5', 'G5'];
+                    const randomNote = notes[Math.floor(Math.random() * notes.length)];
+                    synth.triggerAttackRelease(randomNote, '32n');
+                } else if (type === 'buy') {
+                    // Positive automotive chime
+                    synth.triggerAttackRelease(['E5', 'B5'], '16n');
+                } else if (type === 'bonus') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '8n');
+                }
+            } catch (e) {
+                // Fail silently if audio context is blocked
+            }
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.className = gameState.soundEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute text-red-400';
+            showToast(gameState.soundEnabled ? 'Audio enabled' : 'Audio muted');
+        }
+
+        // --- 4. CALCULATIONS & FORMATTING ---
+
+        function formatNumber(num) {
+            if (num < 1000) return Math.floor(num).toLocaleString();
+            const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa'];
+            const tier = Math.floor(Math.log10(num) / 3);
+            if (tier >= suffixes.length) return num.toExponential(2);
+            const scaled = num / Math.pow(10, tier * 3);
+            return scaled.toFixed(2) + suffixes[tier];
+        }
+
+        function getClickPower() {
+            let power = 1;
+            CLEVER_UPGRADES.forEach(item => {
+                power += (gameState.cleverOwned[item.id] || 0) * item.clickBonus;
+            });
+            return power;
+        }
+
+        function getCps() {
+            let cps = 0;
+            PRODUCTION_UPGRADES.forEach(item => {
+                cps += (gameState.productionOwned[item.id] || 0) * item.baseCps;
+            });
+            return cps;
+        }
+
+        function getItemCost(baseCost, ownedCount) {
+            return Math.floor(baseCost * Math.pow(1.15, ownedCount));
+        }
+
+        // --- 5. SVG CAR RENDERER ---
+
+        function renderVehicleSVG(model) {
+            const bodyColor = model.color;
+            const accentColor = model.accent;
+            const isCombi = model.bodyType === 'combi' || model.bodyType === 'suv';
+            const isSuv = model.bodyType === 'suv';
+            const isEv = model.bodyType === 'ev';
+
+            // Dynamic SVG silhouette tailored to Škoda body styles
+            return `
+            <svg viewBox="0 0 320 150" class="w-full h-full drop-shadow-[0_14px_18px_rgba(0,0,0,0.65)]">
+                <!-- Ground Shadow -->
+                <ellipse cx="160" cy="132" rx="135" ry="10" fill="rgba(0,0,0,0.55)" />
+                
+                <!-- Car Body Silhouette -->
+                <path d="${isCombi 
+                    ? 'M 32,102 L 38,68 L 78,42 L 218,40 L 268,68 L 288,82 L 288,108 L 32,108 Z' 
+                    : 'M 30,104 L 42,72 L 88,42 L 195,42 L 245,70 L 290,82 L 290,108 L 30,108 Z'}" 
+                    fill="${bodyColor}" stroke="#071F19" stroke-width="3" stroke-linejoin="round"/>
+                
+                <!-- Roof Rails for Combi & SUV -->
+                ${isCombi ? `<path d="M 85,38 L 212,37" stroke="${accentColor}" stroke-width="3.5" stroke-linecap="round"/>` : ''}
+
+                <!-- Cabin Windows -->
+                <path d="${isCombi
+                    ? 'M 84,47 L 212,46 L 250,68 L 62,68 Z'
+                    : 'M 92,47 L 190,47 L 230,68 L 66,68 Z'}" 
+                    fill="#0A2921" stroke="${accentColor}" stroke-width="2"/>
+                
+                <!-- B-Pillar -->
+                <rect x="145" y="46" width="7" height="23" fill="${accentColor}" />
+
+                <!-- Signature Škoda C-Shaped LED Taillight -->
+                <path d="M 35,74 L 46,74 L 46,94 L 34,94" fill="none" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+
+                <!-- Front Grille (Illuminated Crystal Face on Enyaq!) -->
+                <rect x="282" y="82" width="8" height="18" rx="2" fill="${isEv ? '#78FAAE' : accentColor}" />
+                
+                <!-- Headlight -->
+                <polygon points="264,78 286,82 272,88" fill="#F8FAFC" />
+
+                <!-- Wheel Arches -->
+                <circle cx="84" cy="108" r="${isSuv ? 26 : 23}" fill="#071F19" />
+                <circle cx="236" cy="108" r="${isSuv ? 26 : 23}" fill="#071F19" />
+
+                <!-- Alloy Wheels -->
+                <circle cx="84" cy="108" r="${isSuv ? 19 : 17}" fill="#1F2937" stroke="#9CA3AF" stroke-width="2.5"/>
+                <circle cx="84" cy="108" r="6" fill="${bodyColor}"/>
+                
+                <circle cx="236" cy="108" r="${isSuv ? 19 : 17}" fill="#1F2937" stroke="#9CA3AF" stroke-width="2.5"/>
+                <circle cx="236" cy="108" r="6" fill="${bodyColor}"/>
+
+                <!-- Door Handle & Simply Clever Emblem -->
+                <rect x="158" y="76" width="14" height="3.5" rx="1.5" fill="${accentColor}" />
+            </svg>
+            `;
+        }
+
+        // --- 6. INTERACTION HANDLERS ---
+
+        function handleCarClick(event) {
+            const gain = getClickPower();
+            gameState.score += gain;
+            gameState.totalEarned += gain;
+            gameState.totalClicks += 1;
+
+            playSound('click');
+
+            // Trigger bounce animation
+            const target = document.getElementById('carClickTarget');
+            target.classList.remove('animate-car-click');
+            void target.offsetWidth; // Force reflow
+            target.classList.add('animate-car-click');
+
+            // Spawn floating +CP indicator
+            spawnFloatingText(event, `+${formatNumber(gain)}`);
+
+            checkModelUnlocks();
+            updateHUD();
+            renderShop();
+        }
+
+        function spawnFloatingText(event, text) {
+            const stage = document.getElementById('clickStage');
+            const rect = stage.getBoundingClientRect();
+            const floater = document.createElement('div');
+            floater.className = 'floating-number font-display text-xl sm:text-2xl';
+            floater.textContent = text;
+
+            let x = rect.width / 2 - 20;
+            let y = rect.height / 2 - 20;
+
+            if (event && event.clientX) {
+                x = event.clientX - rect.left - 15 + (Math.random() * 20 - 10);
+                y = event.clientY - rect.top - 25;
+            }
+
+            floater.style.left = `${x}px`;
+            floater.style.top = `${y}px`;
+            stage.appendChild(floater);
+
+            setTimeout(() => floater.remove(), 850);
+        }
+
+        function buyProductionUpgrade(id) {
+            const item = PRODUCTION_UPGRADES.find(u => u.id === id);
+            const owned = gameState.productionOwned[id] || 0;
+            const cost = getItemCost(item.baseCost, owned);
+
+            if (gameState.score >= cost) {
+                gameState.score -= cost;
+                gameState.productionOwned[id] = owned + 1;
+                playSound('buy');
+                updateHUD();
+                renderShop();
+            }
+        }
+
+        function buyCleverUpgrade(id) {
+            const item = CLEVER_UPGRADES.find(u => u.id === id);
+            const owned = gameState.cleverOwned[id] || 0;
+            const cost = getItemCost(item.baseCost, owned);
+
+            if (gameState.score >= cost) {
+                gameState.score -= cost;
+                gameState.cleverOwned[id] = owned + 1;
+                playSound('buy');
+                updateHUD();
+                renderShop();
+            }
+        }
+
+        function selectModel(modelId) {
+            const model = VEHICLE_MODELS.find(m => m.id === modelId);
+            if (model && gameState.totalEarned >= model.unlockAt) {
+                gameState.selectedModelId = modelId;
+                playSound('buy');
+                updateVehicleDisplay();
+                renderShop();
+                showToast(`Active model switched to ${model.name}`);
+            }
+        }
+
+        function checkModelUnlocks() {
+            // Automatically switch to newly unlocked flagship if player hasn't manually overridden recently
+            for (let i = VEHICLE_MODELS.length - 1; i >= 0; i--) {
+                const m = VEHICLE_MODELS[i];
+                if (gameState.totalEarned >= m.unlockAt) {
+                    const currentModel = VEHICLE_MODELS.find(x => x.id === gameState.selectedModelId);
+                    if (m.unlockAt > currentModel.unlockAt) {
+                        gameState.selectedModelId = m.id;
+                        updateVehicleDisplay();
+                        showToast(`New Model Unlocked: ${m.name}!`);
+                    }
+                    break;
+                }
+            }
+        }
+
+        // --- 7. RANDOM "SIMPLY CLEVER" BONUS EVENTS ---
+
+        function triggerCleverBonus() {
+            const btn = document.getElementById('cleverBonusBtn');
+            if (!btn.classList.contains('hidden')) return;
+
+            const perks = [
+                { label: 'Ice Scraper Found!', icon: 'fa-snowflake' },
+                { label: 'Door Umbrella Bonus!', icon: 'fa-umbrella' },
+                { label: 'Trunk Cargo Jackpot!', icon: 'fa-box-open' }
+            ];
+            const chosen = perks[Math.floor(Math.random() * perks.length)];
+            activeBonusValue = Math.max(25, Math.floor((getCps() * 12) + (getClickPower() * 15)));
+
+            document.getElementById('cleverBonusLabel').textContent = `${chosen.label} +${formatNumber(activeBonusValue)}`;
+            btn.classList.remove('hidden');
+
+            // Hide after 10 seconds if missed
+            setTimeout(() => {
+                btn.classList.add('hidden');
+            }, 10000);
+        }
+
+        function claimCleverBonus() {
+            const btn = document.getElementById('cleverBonusBtn');
+            if (btn.classList.contains('hidden')) return;
+
+            gameState.score += activeBonusValue;
+            gameState.totalEarned += activeBonusValue;
+            btn.classList.add('hidden');
+            playSound('bonus');
+            showToast(`Simply Clever Bonus: +${formatNumber(activeBonusValue)} CP!`);
+            updateHUD();
+            renderShop();
+        }
+
+        // --- 8. UI RENDERING & TABS ---
+
+        function switchTab(tabName) {
+            gameState.activeTab = tabName;
+            ['production', 'clever', 'garage'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (t === tabName) {
+                    el.className = 'py-2.5 px-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 bg-[#165947] text-[#78FAAE] shadow';
+                } else {
+                    el.className = 'py-2.5 px-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 text-emerald-200/70 hover:text-white';
+                }
+            });
+            renderShop();
+        }
+
+        function renderShop() {
+            const container = document.getElementById('shopContainer');
+            container.innerHTML = '';
+
+            if (gameState.activeTab === 'production') {
+                PRODUCTION_UPGRADES.forEach(item => {
+                    const owned = gameState.productionOwned[item.id] || 0;
+                    const cost = getItemCost(item.baseCost, owned);
+                    const canAfford = gameState.score >= cost;
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-[#071F19]/80 border border-[#78FAAE]/15 rounded-xl p-3.5 flex items-center justify-between gap-3';
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-11 h-11 rounded-xl bg-[#124739] border border-[#78FAAE]/30 flex items-center justify-center text-[#78FAAE] text-lg shrink-0">
+                                <i class="fas ${item.icon}"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-bold text-sm sm:text-base text-white truncate">${item.name}</h4>
+                                    <span class="text-xs font-display font-bold px-2 py-0.5 rounded bg-[#78FAAE]/15 text-[#78FAAE]">x${owned}</span>
+                                </div>
+                                <p class="text-xs text-emerald-200/70 line-clamp-1">${item.desc}</p>
+                                <p class="text-[11px] text-[#78FAAE] mt-0.5 font-semibold">+${formatNumber(item.baseCps)} CP/sec each</p>
+                            </div>
+                        </div>
+                        <button onclick="buyProductionUpgrade('${item.id}')" ${canAfford ? '' : 'disabled'} class="btn-skoda px-3.5 py-2.5 rounded-xl text-right shrink-0 cursor-pointer">
+                            <div class="text-[10px] uppercase tracking-wider text-emerald-300">Build</div>
+                            <div class="font-display font-bold text-sm text-[#78FAAE]">${formatNumber(cost)} CP</div>
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } else if (gameState.activeTab === 'clever') {
+                CLEVER_UPGRADES.forEach(item => {
+                    const owned = gameState.cleverOwned[item.id] || 0;
+                    const cost = getItemCost(item.baseCost, owned);
+                    const canAfford = gameState.score >= cost;
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-[#071F19]/80 border border-[#78FAAE]/15 rounded-xl p-3.5 flex items-center justify-between gap-3';
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-11 h-11 rounded-xl bg-[#124739] border border-[#78FAAE]/30 flex items-center justify-center text-[#78FAAE] text-lg shrink-0">
+                                <i class="fas ${item.icon}"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-bold text-sm sm:text-base text-white truncate">${item.name}</h4>
+                                    <span class="text-xs font-display font-bold px-2 py-0.5 rounded bg-[#78FAAE]/15 text-[#78FAAE]">Lvl ${owned}</span>
+                                </div>
+                                <p class="text-xs text-emerald-200/70 line-clamp-2">${item.desc}</p>
+                            </div>
+                        </div>
+                        <button onclick="buyCleverUpgrade('${item.id}')" ${canAfford ? '' : 'disabled'} class="btn-skoda px-3.5 py-2.5 rounded-xl text-right shrink-0 cursor-pointer">
+                            <div class="text-[10px] uppercase tracking-wider text-emerald-300">Equip</div>
+                            <div class="font-display font-bold text-sm text-[#78FAAE]">${formatNumber(cost)} CP</div>
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } else if (gameState.activeTab === 'garage') {
+                VEHICLE_MODELS.forEach(model => {
+                    const unlocked = gameState.totalEarned >= model.unlockAt;
+                    const isSelected = gameState.selectedModelId === model.id;
+
+                    const card = document.createElement('div');
+                    card.className = `border rounded-xl p-3.5 flex items-center justify-between gap-3 transition ${
+                        isSelected 
+                        ? 'bg-[#165947]/80 border-[#78FAAE]' 
+                        : 'bg-[#071F19]/80 border-[#78FAAE]/15'
+                    }`;
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-12 h-12 rounded-xl bg-[#0A2921] border border-white/10 flex items-center justify-center shrink-0">
+                                <i class="fas ${unlocked ? 'fa-car text-[#78FAAE]' : 'fa-lock text-gray-500'} text-lg"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-sm sm:text-base ${unlocked ? 'text-white' : 'text-gray-400'} truncate">
+                                    ${model.name}
+                                </h4>
+                                <p class="text-xs text-emerald-200/70 line-clamp-1">${model.desc}</p>
+                                <p class="text-[11px] ${unlocked ? 'text-[#78FAAE]' : 'text-amber-400/80'} mt-0.5 font-semibold">
+                                    ${unlocked ? 'Unlocked in Fleet' : `Requires ${formatNumber(model.unlockAt)} Total CP`}
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="selectModel('${model.id}')" ${unlocked ? '' : 'disabled'} class="btn-skoda px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 cursor-pointer">
+                            ${isSelected ? '<span class="text-[#78FAAE]"><i class="fas fa-check"></i> Active</span>' : (unlocked ? 'Drive' : 'Locked')}
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        }
+
+        function updateVehicleDisplay() {
+            const currentModel = VEHICLE_MODELS.find(m => m.id === gameState.selectedModelId) || VEHICLE_MODELS[0];
+            document.getElementById('vehicleVisual').innerHTML = renderVehicleSVG(currentModel);
+            document.getElementById('currentModelName').textContent = currentModel.name;
+        }
+
+        function updateHUD() {
+            document.getElementById('scoreDisplay').textContent = formatNumber(gameState.score);
+            document.getElementById('cpsDisplay').textContent = getCps().toFixed(1);
+            document.getElementById('cpcDisplay').textContent = `+${formatNumber(getClickPower())}`;
+
+            // Calculate progress toward next Škoda model tier
+            const nextModel = VEHICLE_MODELS.find(m => m.unlockAt > gameState.totalEarned);
+            const progressBar = document.getElementById('tierProgressBar');
+            const nextText = document.getElementById('nextModelText');
+
+            if (nextModel) {
+                const prevIndex = VEHICLE_MODELS.indexOf(nextModel) - 1;
+                const prevThreshold = prevIndex >= 0 ? VEHICLE_MODELS[prevIndex].unlockAt : 0;
+                const pct = Math.min(100, Math.max(0, ((gameState.totalEarned - prevThreshold) / (nextModel.unlockAt - prevThreshold)) * 100));
+                progressBar.style.width = `${pct}%`;
+                nextText.textContent = `Next: ${nextModel.name.split(' ')[1]} (${formatNumber(nextModel.unlockAt)} CP)`;
+            } else {
+                progressBar.style.width = '100%';
+                nextText.textContent = 'All Flagship Models Unlocked!';
+            }
+        }
+
+        function cycleUsefulTip() {
+            gameState.tipIndex = (gameState.tipIndex + 1) % USEFUL_TIPS.length;
+            document.getElementById('usefulTipText').textContent = USEFUL_TIPS[gameState.tipIndex];
+        }
+
+        // --- 9. TOASTS, MODALS & PERSISTENCE ---
+
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'bg-[#0E3A2F] border border-[#78FAAE] text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 transition-opacity duration-300';
+            toast.innerHTML = `<i class="fas fa-circle-check text-[#78FAAE]"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2600);
+        }
+
+        function saveGame(silent = true) {
+            try {
+                localStorage.setItem('skoda_clicker_save_v1', JSON.stringify(gameState));
+                if (!silent) showToast('Assembly progress saved!');
+            } catch (e) {
+                console.warn('Unable to save to localStorage:', e);
+            }
+        }
+
+        function manualSave() {
+            saveGame(false);
+        }
+
+        function loadGame() {
+            try {
+                const saved = localStorage.getItem('skoda_clicker_save_v1');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    gameState = { ...gameState, ...parsed };
+                }
+            } catch (e) {
+                console.warn('No previous save loaded.');
+            }
+        }
+
+        function openResetModal() {
+            document.getElementById('resetModal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+        }
+
+        function confirmHardReset() {
+            localStorage.removeItem('skoda_clicker_save_v1');
+            gameState.score = 0;
+            gameState.totalEarned = 0;
+            gameState.totalClicks = 0;
+            gameState.selectedModelId = 'felicia';
+            PRODUCTION_UPGRADES.forEach(u => gameState.productionOwned[u.id] = 0);
+            CLEVER_UPGRADES.forEach(u => gameState.cleverOwned[u.id] = 0);
+            
+            closeResetModal();
+            updateVehicleDisplay();
+            updateHUD();
+            renderShop();
+            showToast('Factory reset complete.');
+        }
+
+        // --- 10. MAIN GAME LOOP & INITIALIZATION ---
+
+        window.onload = function () {
+            loadGame();
+            updateVehicleDisplay();
+            updateHUD();
+            renderShop();
+            document.getElementById('usefulTipText').textContent = USEFUL_TIPS[gameState.tipIndex];
+
+            // Keyboard Spacebar shortcut for rapid clicking
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON') {
+                    e.preventDefault();
+                    handleCarClick(null);
+                }
+            });
+
+            // Passive Production Tick (10 times per second for smooth numbers)
+            setInterval(() => {
+                const cps = getCps();
+                if (cps > 0) {
+                    const tickGain = cps / 10;
+                    gameState.score += tickGain;
+                    gameState.totalEarned += tickGain;
+                    checkModelUnlocks();
+                    updateHUD();
+                }
+            }, 100);
+
+            // Refresh shop button affordability states every 500ms
+            setInterval(() => {
+                renderShop();
+            }, 500);
+
+            // Spawn random "Simply Clever" bonus event every 35 seconds
+            setInterval(() => {
+                triggerCleverBonus();
+            }, 35000);
+
+            // Auto-save every 15 seconds
+            setInterval(() => {
+                saveGame(true);
+            }, 15000);
+        };
+    </script>
+</body>
+</html>
